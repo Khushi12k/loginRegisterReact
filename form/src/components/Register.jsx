@@ -1,57 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import bcrypt from "bcryptjs";
 
-const Register = () => {
+export default function Bcrypt_Register() {
   const navigate = useNavigate();
 
   const [data, setData] = useState({
     name: "",
     username: "",
     email: "",
-    phone: "",
     password: "",
   });
 
   const [users, setUsers] = useState(
-    localStorage.getItem("userData")
-      ? JSON.parse(localStorage.getItem("userData"))
+    localStorage.getItem("storedData") !== null
+      ? JSON.parse(localStorage.getItem("storedData"))
       : []
   );
 
-  const handleChange = (e) => {
+  function handleChange(e) {
     const { name, value } = e.target;
     setData({ ...data, [name]: value });
-  };
+  }
 
-  const handleSubmit = async (e) => {
+  function handleSubmit(e) {
     e.preventDefault();
+    const hashedPassword = bcrypt.hashSync(data.password, 10);
 
-   
-    if (!data.name || !data.username || !data.email || !data.phone || !data.password) {
-      alert("Please fill all fields");
-      return;
-    }
+    const BcryptPassword = {...data,
+      password: hashedPassword,
+    };
 
-  
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    const newUser = { ...data, password: hashedPassword };
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-
-    localStorage.setItem("userData", JSON.stringify(updatedUsers));
-
-    alert("Registration successful!");
+    setUsers([...users, BcryptPassword]);
     setData({
       name: "",
       username: "",
       email: "",
-      phone: "",
       password: "",
     });
 
     navigate("/login");
-  };
+  }
+
+  useEffect(() => {
+    localStorage.setItem("storedData", JSON.stringify(users));
+  }, [users]);
 
   return (
     <>
@@ -64,7 +57,6 @@ const Register = () => {
           name="name"
           value={data.name}
           onChange={handleChange}
-          required
         />
         <br /><br />
 
@@ -88,15 +80,8 @@ const Register = () => {
         />
         <br /><br />
 
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone"
-          value={data.phone}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+       
+        <br />
 
         <input
           type="password"
@@ -117,6 +102,4 @@ const Register = () => {
       </form>
     </>
   );
-};
-
-export default Register;
+}
